@@ -11,14 +11,18 @@
 #ifndef __esc__
 #define __esc__
 
+#include <stdbool.h>
 #include <cc.h>
 #include <esc_coe.h>
 #include "options.h"
 
 #define ESCREG_ADDRESS              0x0010
+#define ESCREG_CONF_STATION_ALIAS   0x0012
 #define ESCREG_DLSTATUS             0x0110
 #define ESCREG_ALCONTROL            0x0120
+#define ESCREG_ALCONTROL_ERROR_ACK  0x0010
 #define ESCREG_ALSTATUS             0x0130
+#define ESCREG_ALSTATUS_ERROR_IND   0x0010
 #define ESCREG_ALERROR              0x0134
 #define ESCREG_ALEVENTMASK          0x0204
 #define ESCREG_ALEVENT              0x0220
@@ -57,6 +61,7 @@
 #define ESCREG_AL_STATEMASK         0x001f
 #define ESCREG_AL_ALLBUTINITMASK    0x0e
 #define ESCREG_AL_ERRACKMASK        0x0f
+#define ESCREG_AL_ID_REQUEST        0x0020
 
 #define SYNCTYPE_SUPPORT_FREERUN    0x01
 #define SYNCTYPE_SUPPORT_SYNCHRON   0x02
@@ -98,6 +103,8 @@
 #define OP_TO_OP                 0x88
 
 #define ALERR_NONE                  0x0000
+#define ALERR_UNSPECIFIEDERROR      0x0001
+#define ALERR_NOMEMORY              0x0002
 #define ALERR_INVALIDSTATECHANGE    0x0011
 #define ALERR_UNKNOWNSTATE          0x0012
 #define ALERR_BOOTNOTSUPPORTED      0x0013
@@ -105,12 +112,49 @@
 #define ALERR_INVALIDBOOTMBXCONFIG  0x0015
 #define ALERR_INVALIDMBXCONFIG      0x0016
 #define ALERR_INVALIDSMCONFIG       0x0017
+#define ALERR_NOVALIDINPUTS         0x0018
+#define ALERR_NOVALIDOUTPUTS        0x0019
 #define ALERR_SYNCERROR             0x001A
 #define ALERR_WATCHDOG              0x001B
+#define ALERR_INVALIDSYNCMANAGERTYP 0x001C
 #define ALERR_INVALIDOUTPUTSM       0x001D
 #define ALERR_INVALIDINPUTSM        0x001E
+#define ALERR_INVALIDWDTCFG         0x001F
+#define ALERR_SLAVENEEDSCOLDSTART   0x0020
+#define ALERR_SLAVENEEDSINIT        0x0021
+#define ALERR_SLAVENEEDSPREOP       0x0022
+#define ALERR_SLAVENEEDSSAFEOP      0x0023
+#define ALERR_INVALIDINPUTMAPPING   0x0024
+#define ALERR_INVALIDOUTPUTMAPPING  0x0025
+#define ALERR_INCONSISTENTSETTINGS  0x0026
+#define ALERR_FREERUNNOTSUPPORTED   0x0027
+#define ALERR_SYNCNOTSUPPORTED      0x0028
+#define ALERR_FREERUNNEEDS3BUFFMODE 0x0029
+#define ALERR_BACKGROUNDWATCHDOG    0x002A
+#define ALERR_NOVALIDINPUTSOUTPUTS  0x002B
+#define ALERR_FATALSYNCERROR        0x002C
+#define ALERR_NOSYNCERROR           0x002D
+#define ALERR_INVALIDINPUTFMMUCFG   0x002E
 #define ALERR_DCINVALIDSYNCCFG      0x0030
+#define ALERR_INVALIDDCLATCHCFG     0x0031
+#define ALERR_PLLERROR              0x0032
+#define ALERR_DCSYNCIOERROR         0x0033
+#define ALERR_DCSYNCTIMEOUT         0x0034
+#define ALERR_DCSYNCCYCLETIME       0x0035
 #define ALERR_DCSYNC0CYCLETIME      0x0036
+#define ALERR_DCSYNC1CYCLETIME      0x0037
+#define ALERR_MBXAOE                0x0041
+#define ALERR_MBXEOE                0x0042
+#define ALERR_MBXCOE                0x0043
+#define ALERR_MBXFOE                0x0044
+#define ALERR_MBXSOE                0x0045
+#define ALERR_MBXVOE                0x004F
+#define ALERR_EEPROMNOACCESS        0x0050
+#define ALERR_EEPROMERROR           0x0051
+#define ALERR_SLAVERESTARTEDLOCALLY 0x0060
+#define ALERR_DEVICEIDVALUEUPDATED  0x0061
+#define ALERR_APPLCTRLAVAILABLE     0x00f0
+#define ALERR_UNKNOWN               0xffff
 
 #define MBXERR_SYNTAX                   0x0001
 #define MBXERR_UNSUPPORTEDPROTOCOL      0x0002
@@ -122,17 +166,41 @@
 #define MBXERR_INVALIDSIZE              0x0008
 
 #define ABORT_NOTOGGLE                  0x05030000
+#define ABORT_TRANSFER_TIMEOUT          0x05040000
 #define ABORT_UNKNOWN                   0x05040001
+#define ABORT_INVALID_BLOCK_SIZE        0x05040002
+#define ABORT_INVALID_SEQUENCE_NUMBER   0x05040003
+#define ABORT_BLOCK_CRC_ERROR           0x05040004
+#define ABORT_OUT_OF_MEMORY             0x05040005
 #define ABORT_UNSUPPORTED               0x06010000
 #define ABORT_WRITEONLY                 0x06010001
 #define ABORT_READONLY                  0x06010002
 #define ABORT_SUBINDEX0_NOT_ZERO        0x06010003
+#define ABORT_CA_NOT_SUPPORTED          0x06010004
 #define ABORT_EXCEEDS_MBOX_SIZE         0x06010005
+#define ABORT_SDO_DOWNLOAD_BLOCKED      0x06010006
 #define ABORT_NOOBJECT                  0x06020000
+#define ABORT_MAPPING_OBJECT_ERROR      0x06040041
+#define ABORT_MAPPING_LENGTH_ERROR      0x06040042
+#define ABORT_GENERAL_PARAMETER_ERROR   0x06040043
+#define ABORT_GENERAL_DEVICE_ERROR      0x06040047
+#define ABORT_HARDWARE_ERROR            0x06060000
 #define ABORT_TYPEMISMATCH              0x06070010
+#define ABORT_DATATYPE_TOO_HIGH         0x06070012
+#define ABORT_DATATYPE_TOO_LOW          0x06070013
 #define ABORT_NOSUBINDEX                0x06090011
+#define ABORT_VALUE_EXCEEDED            0x06090030
+#define ABORT_VALUE_TOO_HIGH            0x06090031
+#define ABORT_VALUE_TOO_LOW             0x06090032
+#define ABORT_MODULE_LIST_MISMATCH      0x06090033
+#define ABORT_MAX_VAL_LESS_THAN_MIN_VAL 0x06090036
+#define ABORT_RESOURCE_NOT_AVAILABLE    0x060A0023
 #define ABORT_GENERALERROR              0x08000000
+#define ABORT_DATA_STORE_ERROR          0x08000020
+#define ABORT_DATA_STORE_LOCAL_ERROR    0x08000021
 #define ABORT_NOTINTHISSTATE            0x08000022
+#define ABORT_OBJECT_DICTIONARY_ERROR   0x08000023
+#define ABORT_NO_DATA_AVAILABLE         0x08000024
 
 #define MBXstate_idle                   0x00
 #define MBXstate_inclaim                0x01
@@ -142,9 +210,9 @@
 #define MBXstate_backup                 0x05
 #define MBXstate_again                  0x06
 
-#define COE_DEFAULTLENGTH               0x0a
-#define COE_HEADERSIZE                  0x0a
-#define COE_SEGMENTHEADERSIZE           0x03
+#define COE_DEFAULTLENGTH               0x0AU
+#define COE_HEADERSIZE                  0x0AU
+#define COE_SEGMENTHEADERSIZE           0x03U
 #define COE_SDOREQUEST                  0x02
 #define COE_SDORESPONSE                 0x03
 #define COE_SDOINFORMATION              0x08
@@ -153,7 +221,10 @@
 #define COE_COMMAND_UPLOADRESPONSE      0x40
 #define COE_COMMAND_UPLOADSEGMENT       0x00
 #define COE_COMMAND_UPLOADSEGREQ        0x60
+#define COE_COMMAND_DOWNLOADREQUEST     0x20
 #define COE_COMMAND_DOWNLOADRESPONSE    0x60
+#define COE_COMMAND_DOWNLOADSEGREQ      0x00
+#define COE_COMMAND_DOWNLOADSEGRESP     0x20
 #define COE_COMMAND_LASTSEGMENTBIT      0x01
 #define COE_SIZE_INDICATOR              0x01
 #define COE_EXPEDITED_INDICATOR         0x02
@@ -200,6 +271,7 @@
 #define FOE_ERR_NOTINBOOTSTRAP         0x8009
 #define FOE_ERR_NORIGHTS               0x800A
 #define FOE_ERR_PROGERROR              0x800B
+#define FOE_ERR_CHECKSUM               0x800C
 
 #define FOE_OP_RRQ                     1
 #define FOE_OP_WRQ                     2
@@ -224,6 +296,8 @@
 #define APPSTATE_INPUT                 0x01
 #define APPSTATE_OUTPUT                0x02
 
+#define PREALLOC_BUFFER_SIZE  (PREALLOC_FACTOR * MBXSIZE)
+
 typedef struct sm_cfg
 {
    uint16_t cfg_sma;
@@ -238,6 +312,7 @@ typedef struct esc_cfg
    void * user_arg;
    int use_interrupt;
    int watchdog_cnt;
+   bool skip_default_initialization;
    void (*set_defaults_hook) (void);
    void (*pre_state_change_hook) (uint8_t * as, uint8_t * an);
    void (*post_state_change_hook) (uint8_t * as, uint8_t * an);
@@ -248,7 +323,15 @@ typedef struct esc_cfg
          void * data,
          size_t size,
          uint16_t flags);
-   void (*post_object_download_hook) (uint16_t index,
+   uint32_t (*post_object_download_hook) (uint16_t index,
+         uint8_t subindex,
+         uint16_t flags);
+   uint32_t (*pre_object_upload_hook) (uint16_t index,
+         uint8_t subindex,
+         void * data,
+         size_t *size,
+         uint16_t flags);
+   uint32_t (*post_object_upload_hook) (uint16_t index,
          uint8_t subindex,
          uint16_t flags);
    void (*rxpdo_override) (void);
@@ -257,6 +340,7 @@ typedef struct esc_cfg
    void (*esc_hw_interrupt_disable) (uint32_t mask);
    void (*esc_hw_eep_handler) (void);
    uint16_t (*esc_check_dc_handler) (void);
+   int (*get_device_id) (uint16_t * device_id);
 } esc_cfg_t;
 
 typedef struct
@@ -353,6 +437,7 @@ typedef struct
    int use_interrupt;
    sm_cfg_t  mb[2];
    sm_cfg_t  mbboot[2];
+   bool skip_default_initialization;
    void (*set_defaults_hook) (void);
    void (*pre_state_change_hook) (uint8_t * as, uint8_t * an);
    void (*post_state_change_hook) (uint8_t * as, uint8_t * an);
@@ -363,7 +448,15 @@ typedef struct
          void * data,
          size_t size,
          uint16_t flags);
-   void (*post_object_download_hook) (uint16_t index,
+   uint32_t (*post_object_download_hook) (uint16_t index,
+         uint8_t subindex,
+         uint16_t flags);
+   uint32_t (*pre_object_upload_hook) (uint16_t index,
+         uint8_t subindex,
+         void * data,
+         size_t *size,
+         uint16_t flags);
+   uint32_t (*post_object_upload_hook) (uint16_t index,
          uint8_t subindex,
          uint16_t flags);
    void (*rxpdo_override) (void);
@@ -372,8 +465,9 @@ typedef struct
    void (*esc_hw_interrupt_disable) (uint32_t mask);
    void (*esc_hw_eep_handler) (void);
    uint16_t (*esc_check_dc_handler) (void);
+   int (*get_device_id) (uint16_t * device_id);
    uint8_t MBXrun;
-   size_t activembxsize;
+   uint32_t activembxsize;
    sm_cfg_t * activemb0;
    sm_cfg_t * activemb1;
    uint16_t ESC_SM2_sml;
@@ -395,8 +489,11 @@ typedef struct
    uint8_t segmented;
    void *data;
    uint16_t entries;
-   uint16_t frags;
-   uint16_t fragsleft;
+   uint32_t frags;
+   uint32_t fragsleft;
+   uint16_t index;
+   uint8_t subindex;
+   uint16_t flags;
 
    uint8_t toggle;
 
@@ -409,9 +506,10 @@ typedef struct
    /* Volatile since it may be read from ISR */
    volatile int watchdogcnt;
    volatile uint32_t Time;
-   volatile uint16_t ALevent;
+   volatile uint32_t ALevent;
    volatile int8_t synccounter;
    volatile _App App;
+   uint8_t mbxdata[PREALLOC_BUFFER_SIZE];
 } _ESCvar;
 
 CC_PACKED_BEGIN
@@ -481,7 +579,7 @@ typedef struct CC_PACKED
 CC_PACKED_END
 
 CC_PACKED_BEGIN
-typedef struct CC_PACKED
+typedef struct CC_PACKED CC_ALIGNED(4)
 {
    _MBXh mbxheader;
    _COEh coeheader;
@@ -493,7 +591,7 @@ typedef struct CC_PACKED
 CC_PACKED_END
 
 CC_PACKED_BEGIN
-typedef struct CC_PACKED
+typedef struct CC_PACKED CC_ALIGNED(4)
 {
    _MBXh mbxheader;
    _COEh coeheader;
@@ -603,11 +701,11 @@ typedef struct
 #define ESC_SM3_smc         (SM3_smc)
 #define ESC_SM3_act         (SM3_act)
 
-#define ESC_MBXHSIZE        sizeof(_MBXh)
+#define ESC_MBXHSIZE        ((uint32_t)sizeof(_MBXh))
 #define ESC_MBXDSIZE        (ESC_MBXSIZE - ESC_MBXHSIZE)
-#define ESC_FOEHSIZE        sizeof(_FOEh)
+#define ESC_FOEHSIZE        (uint32_t)sizeof(_FOEh)
 #define ESC_FOE_DATA_SIZE   (ESC_MBXSIZE - (ESC_MBXHSIZE +ESC_FOEHSIZE))
-#define ESC_EOEHSIZE        sizeof(_EOEh)
+#define ESC_EOEHSIZE        ((uint32_t)sizeof(_EOEh))
 #define ESC_EOE_DATA_SIZE   (ESC_MBXSIZE - (ESC_MBXHSIZE +ESC_EOEHSIZE))
 
 void ESC_config (esc_cfg_t * cfg);

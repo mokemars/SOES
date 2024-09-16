@@ -1,6 +1,6 @@
 Simple Open Source EtherCAT Slave
 ====
-[![Build Status](https://travis-ci.org/OpenEtherCATsociety/SOES.svg?branch=master)](https://travis-ci.org/OpenEtherCATsociety/SOES)
+[![Build Status](https://github.com/OpenEtherCATsociety/SOES/workflows/build/badge.svg?branch=master)](https://github.com/OpenEtherCATsociety/SOES/actions?workflow=build)
 
 SOES (Simple OpenSource EtherCAT Slave Stack) is an opensource slave
 stack that is very easy to use and provides a small footprint. It is a
@@ -20,13 +20,13 @@ Feature list:
  - Object dictionary
  - SDO read and write for all sizes including segmented transfers
  - Easy portable C-code suited for embedded applications
- - Fixed PDO mapping
+ - Fixed and/or dynamic PDO mapping
  - FoE with bootstrap template
  - Support for Little and Big endian targets
  - Run polling, mixed polling/interrupt or interrupt
  - Support for SM Synchronization 
  - Support DC sync0 and DC Synchronization
- - Add stack configuration via new configuration paramater to/or from 
+ - Add stack configuration via new configuration parameter to/or from 
    "stack"_init
  - EoE
 

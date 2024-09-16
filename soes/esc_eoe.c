@@ -20,12 +20,12 @@
 #define EOE_HTONL(x) (x)
 #define EOE_NTOHL(x) (x)
 #else
-#define EOE_HTONS(x) ((((x) & 0x00ffUL) << 8) | (((x) & 0xff00UL) >> 8))
+#define EOE_HTONS(x) ((((x) & 0x00ffU) << 8) | (((x) & 0xff00U) >> 8))
 #define EOE_NTOHS(x) EOE_HTONS(x)
-#define EOE_HTONL(x) ((((x) & 0x000000ffUL) << 24) | \
-                     (((x) & 0x0000ff00UL) <<  8) | \
-                     (((x) & 0x00ff0000UL) >>  8) | \
-                     (((x) & 0xff000000UL) >> 24))
+#define EOE_HTONL(x) ((((x) & 0x000000ffU) << 24) | \
+                     (((x) & 0x0000ff00U) <<  8) | \
+                     (((x) & 0x00ff0000U) >>  8) | \
+                     (((x) & 0xff000000U) >> 24))
 #define EOE_NTOHL(x) EOE_HTONL(x)
 #endif /* #if defined(EC_BIG_ENDIAN) */
 
@@ -47,37 +47,37 @@
 /** Header frame info 1 */
 #define EOE_HDR_FRAME_TYPE_OFFSET      0
 #define EOE_HDR_FRAME_TYPE             (0xF << 0)
-#define EOE_HDR_FRAME_TYPE_SET(x)      (((x) & 0xF) << 0)
+#define EOE_HDR_FRAME_TYPE_SET(x)      ((uint16_t)(((x) & 0xF) << 0))
 #define EOE_HDR_FRAME_TYPE_GET(x)      (((x) >> 0) & 0xF)
 #define EOE_HDR_FRAME_PORT_OFFSET      4
 #define EOE_HDR_FRAME_PORT             (0xF << 4)
-#define EOE_HDR_FRAME_PORT_SET(x)      (((x) & 0xF) << 4)
+#define EOE_HDR_FRAME_PORT_SET(x)      ((uint16_t)(((x) & 0xF) << 4))
 #define EOE_HDR_FRAME_PORT_GET(x)      (((x) >> 4) & 0xF)
 #define EOE_HDR_LAST_FRAGMENT_OFFSET   8
 #define EOE_HDR_LAST_FRAGMENT          (0x1 << 8)
-#define EOE_HDR_LAST_FRAGMENT_SET(x)   (((x) & 0x1) << 8)
+#define EOE_HDR_LAST_FRAGMENT_SET(x)   ((uint16_t)(((x) & 0x1) << 8))
 #define EOE_HDR_LAST_FRAGMENT_GET(x)   (((x) >> 8) & 0x1)
 #define EOE_HDR_TIME_APPEND_OFFSET     9
 #define EOE_HDR_TIME_APPEND            (0x1 << 9)
-#define EOE_HDR_TIME_APPEND_SET(x)     (((x) & 0x1) << 9)
+#define EOE_HDR_TIME_APPEND_SET(x)     ((uint16_t)(((x) & 0x1) << 9))
 #define EOE_HDR_TIME_APPEND_GET(x)     (((x) >> 9) & 0x1)
 #define EOE_HDR_TIME_REQUEST_OFFSET    10
 #define EOE_HDR_TIME_REQUEST           (0x1 << 10)
-#define EOE_HDR_TIME_REQUEST_SET(x)    (((x) & 0x1) << 10)
+#define EOE_HDR_TIME_REQUEST_SET(x)    ((uint16_t)(((x) & 0x1) << 10))
 #define EOE_HDR_TIME_REQUEST_GET(x)    (((x) >> 10) & 0x1)
 
 /** Header frame info 2 */
 #define EOE_HDR_FRAG_NO_OFFSET         0
 #define EOE_HDR_FRAG_NO                (0x3F << 0)
-#define EOE_HDR_FRAG_NO_SET(x)         (((x) & 0x3F) << 0)
+#define EOE_HDR_FRAG_NO_SET(x)         ((uint16_t)(((x) & 0x3F) << 0))
 #define EOE_HDR_FRAG_NO_GET(x)         (((x) >> 0) & 0x3F)
 #define EOE_HDR_FRAME_OFFSET_OFFSET    6
 #define EOE_HDR_FRAME_OFFSET           (0x3F << 6)
-#define EOE_HDR_FRAME_OFFSET_SET(x)    (((x) & 0x3F) << 6)
+#define EOE_HDR_FRAME_OFFSET_SET(x)    ((uint16_t)(((x) & 0x3F) << 6))
 #define EOE_HDR_FRAME_OFFSET_GET(x)    (((x) >> 6) & 0x3F)
 #define EOE_HDR_FRAME_NO_OFFSET        12
 #define EOE_HDR_FRAME_NO               (0xF << 12)
-#define EOE_HDR_FRAME_NO_SET(x)        (((x) & 0xF) << 12)
+#define EOE_HDR_FRAME_NO_SET(x)        ((uint16_t)(((x) & 0xF) << 12))
 #define EOE_HDR_FRAME_NO_GET(x)        (((x) >> 12) & 0xF)
 
 /** EOE param */
@@ -108,6 +108,8 @@
 #define EOE_DNS_NAME_LENGTH  32
 /** Ethernet address length not including VLAN */
 #define EOE_ETHADDR_LENGTH    6
+/** IPv4 address length */
+#define EOE_IP4_LENGTH        4U /* sizeof(uint32_t) */
 
 /** EOE ip4 address in network order */
 struct eoe_ip4_addr {
@@ -133,18 +135,18 @@ typedef struct
    /** Current RX fragment number */
    uint8_t rxfragmentno;
    /** Complete RX frame size of current frame */
-   uint16_t rxframesize;
+   uint32_t rxframesize;
    /** Current RX data offset in frame */
-   uint16_t rxframeoffset;
+   uint32_t rxframeoffset;
    /** Current RX frame number */
    uint16_t rxframeno;
 
    /** Current TX fragment number */
    uint8_t txfragmentno;
    /** Complete TX frame size of current frame */
-   uint16_t txframesize;
+   uint32_t txframesize;
    /** Current TX data offset in frame */
-   uint16_t txframeoffset;
+   uint32_t txframeoffset;
 } _EOEvar;
 
 /** EoE IP request structure */
@@ -215,7 +217,7 @@ static void EOE_ip_byte_to_uint32 (uint8_t * byte_ip, eoe_ip4_addr_t * ip)
  * @param[out] mac   = variable to store mac in, should fit EOE_ETHADDR_LENGTH
  * @return 0= if we succeed, -1 if not set
  */
-int EOE_get_mac(uint8_t port, uint8_t mac[])
+int EOE_ecat_get_mac(uint8_t port, uint8_t mac[])
 {
    int ret = -1;
    int port_ix;
@@ -504,7 +506,7 @@ static void EOE_get_ip (void)
    uint16_t frameinfo1;
    uint8_t port;
    uint8_t  flags;
-   uint8_t  data_offset;
+   uint32_t  data_offset;
    int port_ix;
 
    req_eoembx = (_EOE *) &MBX[0];
@@ -516,14 +518,14 @@ static void EOE_get_ip (void)
    if(port  > EOE_NUMBER_OF_PORTS)
    {
       DPRINT("Invalid port\n");
+      frameinfo1 = EOE_HDR_FRAME_PORT_SET(port);
+      frameinfo1 |= EOE_INIT_RESP;
+      frameinfo1 |= EOE_HDR_LAST_FRAGMENT;
       /* Return error response on given port */
-      EOE_no_data_response((EOE_HDR_FRAME_PORT_SET(port) |
-            EOE_INIT_RESP |
-            EOE_HDR_LAST_FRAGMENT),
+      EOE_no_data_response(frameinfo1,
             EOE_RESULT_UNSPECIFIED_ERROR);
       return;
    }
-
 
    /* Refresh settings if needed */
    if(eoe_cfg->load_eth_settings != NULL)
@@ -538,10 +540,10 @@ static void EOE_get_ip (void)
       eoembx = (_EOE *) &MBX[mbxhandle * ESC_MBXSIZE];
       eoembx->mbxheader.mbxtype = MBXEOE;
       MBXcontrol[mbxhandle].state = MBXstate_outreq;
-      eoembx->eoeheader.frameinfo1 =
-            htoes(EOE_HDR_FRAME_TYPE_SET(EOE_GET_IP_PARAM_RESP) |
-                  EOE_HDR_FRAME_PORT_SET(port) |
-                  EOE_HDR_LAST_FRAGMENT);
+      frameinfo1 = EOE_HDR_FRAME_PORT_SET(port);
+      frameinfo1 |= EOE_HDR_FRAME_TYPE_SET(EOE_GET_IP_PARAM_RESP);
+      frameinfo1 |= EOE_HDR_LAST_FRAGMENT;
+      eoembx->eoeheader.frameinfo1 = htoes(frameinfo1);
       eoembx->eoeheader.frameinfo2 = 0;
 
       /* include mac in get ip request */
@@ -552,55 +554,60 @@ static void EOE_get_ip (void)
          memcpy(&eoembx->data[data_offset] ,
                nic_ports[port_ix].mac.addr,
                EOE_ETHADDR_LENGTH);
+         /* Add size of mac address */
+         data_offset += EOE_ETHADDR_LENGTH;
+
       }
-      /* Add size of mac address */
-      data_offset += EOE_ETHADDR_LENGTH;
       /* include ip in get ip request */
       if(nic_ports[port_ix].ip_set)
       {
          flags |= EOE_PARAM_IP_INCLUDE;
          EOE_ip_uint32_to_byte(&nic_ports[port_ix].ip,
                &eoembx->data[data_offset]);
+         /* Add size of uint32 IP address */
+         data_offset += EOE_IP4_LENGTH;
       }
-      /* Add size of uint32 IP address */
-      data_offset += 4;
+
       /* include subnet in get ip request */
       if(nic_ports[port_ix].subnet_set)
       {
          flags |= EOE_PARAM_SUBNET_IP_INCLUDE;
          EOE_ip_uint32_to_byte(&nic_ports[port_ix].subnet,
                &eoembx->data[data_offset]);
+         /* Add size of uint32 IP address */
+         data_offset += EOE_IP4_LENGTH;
       }
-      /* Add size of uint32 IP address */
-      data_offset += 4;
+
       /* include default gateway in get ip request */
       if(nic_ports[port_ix].default_gateway_set)
       {
          flags |= EOE_PARAM_DEFAULT_GATEWAY_INCLUDE;
          EOE_ip_uint32_to_byte(&nic_ports[port_ix].default_gateway,
                &eoembx->data[data_offset]);
+         /* Add size of uint32 IP address */
+         data_offset += EOE_IP4_LENGTH;
       }
-      /* Add size of uint32 IP address */
-      data_offset += 4;
       /* include dns ip in get ip request */
       if(nic_ports[port_ix].dns_ip_set)
       {
          flags |= EOE_PARAM_DNS_IP_INCLUDE;
          EOE_ip_uint32_to_byte(&nic_ports[port_ix].dns_ip,
                &eoembx->data[data_offset]);
+         /* Add size of uint32 IP address */
+         data_offset += EOE_IP4_LENGTH;
       }
-      /* Add size of uint32 IP address */
-      data_offset += 4;
+
       /* include dns name in get ip request */
       if(nic_ports[port_ix].dns_name_set)
       {
+         /* TwinCAT include EOE_DNS_NAME_LENGTH chars even if name is shorter */
          flags |= EOE_PARAM_DNS_NAME_INCLUDE;
          memcpy(&eoembx->data[data_offset],
                nic_ports[port_ix].dns_name,
                EOE_DNS_NAME_LENGTH);
+         /* Add size of dns name length */
+         data_offset += EOE_DNS_NAME_LENGTH;
       }
-      /* Add size of dns name length */
-      data_offset += EOE_DNS_NAME_LENGTH;
 
       eoembx->data[0] = flags;
       eoembx->mbxheader.length = htoes (ESC_EOEHSIZE + data_offset);
@@ -612,11 +619,10 @@ static void EOE_get_ip (void)
 static void EOE_set_ip (void)
 {
    _EOE *eoembx;
-   uint16_t eoedatasize;
+   uint32_t eoedatasize, data_offset;
    uint16_t frameinfo1;
    uint8_t port;
    uint8_t  flags;
-   uint8_t  data_offset;
    uint16_t result;
    int port_ix;
 
@@ -631,10 +637,10 @@ static void EOE_set_ip (void)
    {
       DPRINT("Invalid port\n");
       /* Return error response on given port */
-      EOE_no_data_response((EOE_HDR_FRAME_PORT_SET(port) |
-            EOE_INIT_RESP |
-            EOE_HDR_LAST_FRAGMENT),
-            EOE_RESULT_UNSPECIFIED_ERROR);
+      frameinfo1 = EOE_HDR_FRAME_PORT_SET(port);
+      frameinfo1 |= EOE_INIT_RESP;
+      frameinfo1 |= EOE_HDR_LAST_FRAGMENT;
+      EOE_no_data_response(frameinfo1, EOE_RESULT_UNSPECIFIED_ERROR);
       return;
    }
 
@@ -646,55 +652,55 @@ static void EOE_set_ip (void)
             &eoembx->data[data_offset],
             EOE_ETHADDR_LENGTH);
       nic_ports[port_ix].mac_set = 1;
+      /* Add size of mac address */
+      data_offset += EOE_ETHADDR_LENGTH;
    }
-   /* Add size of mac address */
-   data_offset += EOE_ETHADDR_LENGTH;
    /* ip included in set ip request? */
    if(flags & EOE_PARAM_IP_INCLUDE)
    {
       EOE_ip_byte_to_uint32(&eoembx->data[data_offset],
             &nic_ports[port_ix].ip);
       nic_ports[port_ix].ip_set = 1;
+      /* Add size of uint32 IP address */
+      data_offset += EOE_IP4_LENGTH;
    }
-   /* Add size of uint32 IP address */
-   data_offset += 4;
    /* subnet included in set ip request? */
    if(flags & EOE_PARAM_SUBNET_IP_INCLUDE)
    {
       EOE_ip_byte_to_uint32(&eoembx->data[data_offset],
             &nic_ports[port_ix].subnet);
       nic_ports[port_ix].subnet_set = 1;
+      /* Add size of uint32 IP address */
+      data_offset += EOE_IP4_LENGTH;
    }
-   /* Add size of uint32 IP address */
-   data_offset += 4;
    /* default gateway included in set ip request? */
    if(flags & EOE_PARAM_DEFAULT_GATEWAY_INCLUDE)
    {
       EOE_ip_byte_to_uint32(&eoembx->data[data_offset],
             &nic_ports[port_ix].default_gateway);
       nic_ports[port_ix].default_gateway_set = 1;
+      /* Add size of uint32 IP address */
+      data_offset += EOE_IP4_LENGTH;
    }
-   /* Add size of uint32 IP address */
-   data_offset += 4;
    /* dns ip included in set ip request? */
    if(flags & EOE_PARAM_DNS_IP_INCLUDE)
    {
       EOE_ip_byte_to_uint32(&eoembx->data[data_offset],
             &nic_ports[port_ix].dns_ip);
       nic_ports[port_ix].dns_ip_set = 1;
+      /* Add size of uint32 IP address */
+      data_offset += EOE_IP4_LENGTH;
    }
-   /* Add size of uint32 IP address */
-   data_offset += 4;
    /* dns name included in set ip request? */
    if(flags & EOE_PARAM_DNS_NAME_INCLUDE)
    {
-      uint16_t dns_len = MIN((eoedatasize - data_offset), EOE_DNS_NAME_LENGTH);
+      uint32_t dns_len = MIN((eoedatasize - data_offset), EOE_DNS_NAME_LENGTH);
       memcpy(nic_ports[port_ix].dns_name,
             &eoembx->data[data_offset],
             dns_len);
       nic_ports[port_ix].dns_name_set = 1;
+      data_offset += dns_len; /* expected 1- EOE_DNS_NAME_LENGTH; */
    }
-   data_offset += EOE_DNS_NAME_LENGTH;
 
    if(data_offset > eoedatasize)
    {
@@ -706,17 +712,17 @@ static void EOE_set_ip (void)
        * you typically set the IP for the TCP/IP stack */
       if(eoe_cfg->store_ethernet_settings != NULL)
       {
-         result = eoe_cfg->store_ethernet_settings();
+         result = (uint16_t)eoe_cfg->store_ethernet_settings();
       }
       else
       {
          result = EOE_RESULT_NO_IP_SUPPORT;
       }
    }
-   EOE_no_data_response((EOE_HDR_FRAME_PORT_SET(port) |
-         EOE_INIT_RESP |
-         EOE_HDR_LAST_FRAGMENT),
-         result);
+   frameinfo1 = EOE_HDR_FRAME_PORT_SET(port);
+   frameinfo1 |= EOE_INIT_RESP;
+   frameinfo1 |= EOE_HDR_LAST_FRAGMENT;
+   EOE_no_data_response(frameinfo1, result);
 }
 
 /** EoE receive fragment handler.
@@ -725,14 +731,14 @@ static void EOE_receive_fragment (void)
 {
    _EOE *eoembx;
    eoembx = (_EOE *) &MBX[0];
-   uint16_t eoedatasize = etohs(eoembx->mbxheader.length) - ESC_EOEHSIZE;
+   uint32_t eoedatasize = etohs(eoembx->mbxheader.length) - ESC_EOEHSIZE;
    uint16_t frameinfo1 = etohs(eoembx->eoeheader.frameinfo1);
    uint16_t frameinfo2 = etohs(eoembx->eoeheader.frameinfo2);
 
    /* Capture error case */
    if(EOEvar.rxfragmentno != EOE_HDR_FRAG_NO_GET(frameinfo2))
    {
-      DPRINT("Unexpected fragment number %d, expected: %d\n",
+      DPRINT("Unexpected fragment number %"PRIu32", expected: %"PRIu32"\n",
             EOE_HDR_FRAG_NO_GET(frameinfo2), EOEvar.rxfragmentno);
       /* Clean up existing saved data */
       if(EOEvar.rxfragmentno != 0)
@@ -757,22 +763,28 @@ static void EOE_receive_fragment (void)
          EOEvar.rxframeoffset = 0;
          EOEvar.rxframeno = EOE_HDR_FRAME_NO_GET(frameinfo2);
       }
+      else
+      {
+         DPRINT("Receive buffer is invalid\n");
+         EOE_init_rx ();
+         return;
+      }
    }
    /* In frame fragment received */
    else
    {
-      uint16_t offset = (EOE_HDR_FRAME_OFFSET_GET(frameinfo2) << 5);
+      uint32_t offset = (EOE_HDR_FRAME_OFFSET_GET(frameinfo2) << 5);
       /* Validate received fragment */
       if(EOEvar.rxframeno != EOE_HDR_FRAME_NO_GET(frameinfo2))
       {
-         DPRINT("Unexpected frame number %d, expected: %d\n",
+         DPRINT("Unexpected frame number %"PRIu32", expected: %"PRIu32"\n",
                EOE_HDR_FRAME_NO_GET(frameinfo2), EOEvar.rxframeno);
          EOE_init_rx ();
          return;
       }
       else if(EOEvar.rxframeoffset != offset)
       {
-         DPRINT("Unexpected frame offset %d, expected: %d\n",
+         DPRINT("Unexpected frame offset %"PRIu32", expected: %"PRIu32"\n",
                offset, EOEvar.rxframeoffset);
          EOE_init_rx ();
          return;
@@ -790,8 +802,7 @@ static void EOE_receive_fragment (void)
    }
    else
    {
-      DPRINT("Size of data exceed available buffer size\n",
-            EOEvar.rxframeoffset);
+      DPRINT("Size of data exceed available buffer size\n");
       EOE_init_rx ();
       return;
    }
@@ -801,7 +812,7 @@ static void EOE_receive_fragment (void)
       /* Remove time stamp, TODO support for time stamp? */
       if(EOE_HDR_TIME_APPEND_GET(frameinfo1))
       {
-         EOEvar.rxframeoffset -= 4;
+         EOEvar.rxframeoffset -= 4U;
       }
       EOEvar.rxebuf.len =  EOEvar.rxframeoffset;
       eoe_cfg->handle_recv_buffer(EOE_HDR_FRAME_PORT_GET(frameinfo1),
@@ -819,7 +830,7 @@ static void EOE_send_fragment ()
    _EOE *eoembx;
    uint8_t mbxhandle;
    int len;
-   int len_to_send;
+   uint32_t len_to_send;
    uint16_t frameinfo1;
    uint16_t frameinfo2;
    static uint8_t frameno = 0;
@@ -831,7 +842,7 @@ static void EOE_send_fragment ()
       len = eoe_cfg->fetch_send_buffer(0, &EOEvar.txebuf);
       if(len > 0)
       {
-         EOEvar.txframesize = len;
+         EOEvar.txframesize = (uint32_t)len;
       }
       else
       {
@@ -843,7 +854,7 @@ static void EOE_send_fragment ()
    mbxhandle = ESC_claimbuffer ();
    if (mbxhandle)
    {
-      len_to_send = EOEvar.txframesize - EOEvar.txframeoffset;
+      len_to_send = (EOEvar.txframesize - EOEvar.txframeoffset);
       if((len_to_send + ESC_EOEHSIZE + ESC_MBXHSIZE) > ESC_MBXSIZE)
       {
          /* Adjust to len in whole 32 octet blocks to fit specification*/
@@ -861,23 +872,26 @@ static void EOE_send_fragment ()
          frameinfo1 = 0;
       }
 
+      uint16_t tempframe2;
       /* Set fragment number */
       frameinfo2 = EOE_HDR_FRAG_NO_SET(EOEvar.txfragmentno);
 
       /* Set complete size for fragment 0 or offset for in frame fragments */
       if(EOEvar.txfragmentno > 0)
       {
-         frameinfo2 |= (EOE_HDR_FRAME_OFFSET_SET((EOEvar.txframeoffset >> 5)));
+         tempframe2 = EOE_HDR_FRAME_OFFSET_SET((EOEvar.txframeoffset >> 5));
+         frameinfo2 |= tempframe2;
       }
       else
       {
-         frameinfo2 |=
-               (EOE_HDR_FRAME_OFFSET_SET(((EOEvar.txframesize + 31) >> 5)));
+         tempframe2 = EOE_HDR_FRAME_OFFSET_SET(((EOEvar.txframesize + 31) >> 5));
+         frameinfo2 |= tempframe2;
          frameno++;
       }
 
       /* Set frame number */
-      frameinfo2 = frameinfo2 | EOE_HDR_FRAME_NO_SET(frameno);
+      tempframe2 = EOE_HDR_FRAME_NO_SET(frameno);
+      frameinfo2 |= tempframe2;
 
       eoembx = (_EOE *) &MBX[mbxhandle * ESC_MBXSIZE];
       eoembx->mbxheader.length = htoes (len_to_send + ESC_EOEHSIZE);
@@ -899,7 +913,7 @@ static void EOE_send_fragment ()
       else
       {
          EOEvar.txframeoffset += len_to_send;
-         EOEvar.txfragmentno += 1;
+         EOEvar.txfragmentno++;
       }
       if(eoe_cfg->fragment_sent_event != NULL)
       {

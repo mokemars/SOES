@@ -14,6 +14,7 @@ extern "C"
 #include <assert.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <inttypes.h>
 #include <sys/param.h>
 #ifdef __linux__
    #include <endian.h>
@@ -32,8 +33,10 @@ extern "C"
 #define CC_PACKED_BEGIN
 #define CC_PACKED_END
 #define CC_PACKED       __attribute__((packed))
+#define CC_ALIGNED(n)   __attribute__((aligned (n)))
 
 #ifdef __rtk__
+#include <kern/assert.h>
 #define CC_ASSERT(exp) ASSERT (exp)
 #else
 #define CC_ASSERT(exp) assert (exp)
@@ -43,7 +46,7 @@ extern "C"
 #define CC_DEPRECATED   __attribute__((deprecated))
 
 #define CC_SWAP32(x) __builtin_bswap32 (x)
-#define CC_SWAP16(x) ((uint16_t)(x) >> 8 | ((uint16_t)(x) & 0xFF) << 8)
+#define CC_SWAP16(x) __builtin_bswap16 (x)
 
 #define CC_ATOMIC_SET(var,val)   __atomic_store_n(&var,val,__ATOMIC_SEQ_CST)
 #define CC_ATOMIC_GET(var)       __atomic_load_n(&var,__ATOMIC_SEQ_CST)
@@ -53,11 +56,11 @@ extern "C"
 #define CC_ATOMIC_OR(var,val)    __atomic_or_fetch(&var,val,__ATOMIC_SEQ_CST)
 
 #if BYTE_ORDER == BIG_ENDIAN
-#define htoes(x) CC_SWAP16 (x)
-#define htoel(x) CC_SWAP32 (x)
+#define htoes(x) CC_SWAP16 ((uint16_t)(x))
+#define htoel(x) CC_SWAP32 ((uint32_t)(x))
 #else
-#define htoes(x) (x)
-#define htoel(x) (x)
+#define htoes(x) ((uint16_t)(x))
+#define htoel(x) ((uint32_t)(x))
 #endif
 
 #define etohs(x) htoes (x)
@@ -70,11 +73,16 @@ extern "C"
 #endif
 
 #ifdef ESC_DEBUG
-#include <rprint.h>
-#define DPRINT(...) rprintp ("soes: "__VA_ARGS__) /* TODO */
+#ifdef __rtk__
+#include <kern/rprint.h>
+#define DPRINT(...) rprintp ("soes: "__VA_ARGS__)
+#else
+#include <stdio.h>
+#define DPRINT(...) printf ("soes: "__VA_ARGS__)
+#endif
 #else
 #define DPRINT(...)
-#endif  /* DEBUG */
+#endif
 
 #ifdef __cplusplus
 }

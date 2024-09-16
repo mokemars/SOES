@@ -13,21 +13,20 @@
 
 #include <cc.h>
 
-CC_PACKED_BEGIN
-typedef struct CC_PACKED
+
+typedef struct
 {
    uint16_t subindex;
    uint16_t datatype;
    uint16_t bitlength;
    uint16_t flags;
    const char *name;
-   uint64_t value;
+   uint32_t value;
    void *data;
 } _objd;
-CC_PACKED_END
 
-CC_PACKED_BEGIN
-typedef struct CC_PACKED
+
+typedef struct
 {
    uint16_t index;
    uint16_t objtype;
@@ -36,12 +35,13 @@ typedef struct CC_PACKED
    const char *name;
    const _objd *objdesc;
 } _objectlist;
-CC_PACKED_END
+
 
 typedef struct
 {
    const _objd * obj;
-   uint16_t offset;
+   const _objectlist * objectlistitem;
+   uint32_t offset;
 } _SMmap;
 
 #define OBJH_READ               0
@@ -72,6 +72,9 @@ typedef struct
 #define DTYPE_REAL64            0x0011
 #define DTYPE_PDO_MAPPING       0x0021
 #define DTYPE_IDENTITY          0x0023
+#define DTYPE_BITARR8           0x002D
+#define DTYPE_BITARR16          0x002E
+#define DTYPE_BITARR32          0x002F
 #define DTYPE_BIT1              0x0030
 #define DTYPE_BIT2              0x0031
 #define DTYPE_BIT3              0x0032
@@ -80,6 +83,10 @@ typedef struct
 #define DTYPE_BIT6              0x0035
 #define DTYPE_BIT7              0x0036
 #define DTYPE_BIT8              0x0037
+#define DTYPE_ARRAY_OF_INT      0x0260
+#define DTYPE_ARRAY_OF_SINT     0x0261
+#define DTYPE_ARRAY_OF_DINT     0x0262
+#define DTYPE_ARRAY_OF_UDINT    0x0263
 
 #define ATYPE_Rpre              0x01
 #define ATYPE_Rsafe             0x02
@@ -89,29 +96,43 @@ typedef struct
 #define ATYPE_Wop               0x20
 #define ATYPE_RXPDO             0x40
 #define ATYPE_TXPDO             0x80
+#define ATYPE_BACKUP            0x100
+#define ATYPE_SETTING           0x200
 
 #define ATYPE_RO                (ATYPE_Rpre | ATYPE_Rsafe | ATYPE_Rop)
-#define ATYPE_RW                (ATYPE_Wpre | ATYPE_Wsafe | ATYPE_Wop | ATYPE_RO)
+#define ATYPE_WO                (ATYPE_Wpre | ATYPE_Wsafe | ATYPE_Wop)
+#define ATYPE_RW                (ATYPE_RO | ATYPE_WO)
 #define ATYPE_RWpre             (ATYPE_Wpre | ATYPE_RO)
+#define ATYPE_RWop              (ATYPE_Wop | ATYPE_RO)
+#define ATYPE_RWpre_safe        (ATYPE_Wpre | ATYPE_Wsafe | ATYPE_RO)
 
 #define TX_PDO_OBJIDX           0x1c13
 #define RX_PDO_OBJIDX           0x1c12
 
+#define COMPLETE_ACCESS_FLAG    (1 << 15)
+
 void ESC_coeprocess (void);
+int16_t SDO_findsubindex (int32_t nidx, uint8_t subindex);
+int32_t SDO_findobject (uint16_t index);
 uint16_t sizeOfPDO (uint16_t index, int * nmappings, _SMmap * sm, int max_mappings);
-void SDO_abort (uint16_t index, uint8_t subindex, uint32_t abortcode);
 void COE_initDefaultValues (void);
 
 void COE_pdoPack (uint8_t * buffer, int nmappings, _SMmap * sm);
 void COE_pdoUnpack (uint8_t * buffer, int nmappings, _SMmap * sm);
 uint8_t COE_maxSub (uint16_t index);
 
-extern void ESC_objecthandler (uint16_t index, uint8_t subindex, uint16_t flags);
-extern uint32_t ESC_pre_objecthandler (uint16_t index,
+extern uint32_t ESC_download_post_objecthandler (uint16_t index, uint8_t subindex, uint16_t flags);
+extern uint32_t ESC_download_pre_objecthandler (uint16_t index,
       uint8_t subindex,
       void * data,
       size_t size,
       uint16_t flags);
+extern uint32_t ESC_upload_pre_objecthandler (uint16_t index,
+      uint8_t subindex,
+      void * data,
+      size_t *size,
+      uint16_t flags);
+extern uint32_t ESC_upload_post_objecthandler (uint16_t index, uint8_t subindex, uint16_t flags);
 extern const _objectlist SDOobjects[];
 
 #endif

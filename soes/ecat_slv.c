@@ -25,13 +25,13 @@ static volatile int watchdog;
 #if MAX_MAPPINGS_SM2 > 0
 static uint8_t rxpdo[MAX_RXPDO_SIZE] __attribute__((aligned (8)));
 #else
-extern uint8_t * rxpdo;
+extern uint8_t rxpdo[];
 #endif
 
 #if MAX_MAPPINGS_SM3 > 0
 static uint8_t txpdo[MAX_TXPDO_SIZE] __attribute__((aligned (8)));
 #else
-extern uint8_t * txpdo;
+extern uint8_t txpdo[];
 #endif
 
 /** Function to pre-qualify the incoming SDO download.
@@ -40,35 +40,34 @@ extern uint8_t * txpdo;
  * @param[in] sub-index  = sub-index of SDO download request to check
  * @return SDO abort code, or 0 on success
  */
-uint32_t ESC_pre_objecthandler (uint16_t index,
+uint32_t ESC_download_pre_objecthandler (uint16_t index,
       uint8_t subindex,
       void * data,
       size_t size,
       uint16_t flags)
 {
-   uint32_t abort = 0;
-
    if (IS_RXPDO (index) ||
        IS_TXPDO (index) ||
        index == RX_PDO_OBJIDX ||
        index == TX_PDO_OBJIDX)
    {
-      if (subindex > 0 && COE_maxSub (index) != 0)
+      uint8_t minSub = ((flags & COMPLETE_ACCESS_FLAG) == 0) ? 0 : 1;
+      if (subindex > minSub && COE_maxSub (index) != 0)
       {
-         abort = ABORT_SUBINDEX0_NOT_ZERO;
+         return ABORT_SUBINDEX0_NOT_ZERO;
       }
    }
 
    if (ESCvar.pre_object_download_hook)
    {
-      abort = (ESCvar.pre_object_download_hook) (index,
+      return (ESCvar.pre_object_download_hook) (index,
             subindex,
             data,
             size,
             flags);
    }
 
-   return abort;
+   return 0;
 }
 
 /** Hook called from the slave stack SDO Download handler to act on
@@ -76,13 +75,57 @@ uint32_t ESC_pre_objecthandler (uint16_t index,
  *
  * @param[in] index      = index of SDO download request to handle
  * @param[in] sub-index  = sub-index of SDO download request to handle
+ * @return SDO abort code, or 0 on success
  */
-void ESC_objecthandler (uint16_t index, uint8_t subindex, uint16_t flags)
+uint32_t ESC_download_post_objecthandler (uint16_t index, uint8_t subindex, uint16_t flags)
 {
    if (ESCvar.post_object_download_hook != NULL)
    {
-      (ESCvar.post_object_download_hook)(index, subindex, flags);
+      return (ESCvar.post_object_download_hook)(index, subindex, flags);
    }
+
+   return 0;
+}
+
+/** Function to pre-qualify the incoming SDO upload.
+ *
+ * @param[in] index      = index of SDO upload request to handle
+ * @param[in] sub-index  = sub-index of SDO upload request to handle
+ * @return SDO abort code, or 0 on success
+ */
+uint32_t ESC_upload_pre_objecthandler (uint16_t index,
+      uint8_t subindex,
+      void * data,
+      size_t *size,
+      uint16_t flags)
+{
+   if (ESCvar.pre_object_upload_hook != NULL)
+   {
+      return (ESCvar.pre_object_upload_hook) (index,
+            subindex,
+            data,
+            size,
+            flags);
+   }
+
+   return 0;
+}
+
+/** Hook called from the slave stack SDO Upload handler to act on
+ * user specified Index and Sub-index.
+ *
+ * @param[in] index      = index of SDO upload request to handle
+ * @param[in] sub-index  = sub-index of SDO upload request to handle
+ * @return SDO abort code, or 0 on success
+ */
+uint32_t ESC_upload_post_objecthandler (uint16_t index, uint8_t subindex, uint16_t flags)
+{
+   if (ESCvar.post_object_upload_hook != NULL)
+   {
+      return (ESCvar.post_object_upload_hook)(index, subindex, flags);
+   }
+
+   return 0;
 }
 
 /** Hook called from the slave stack ESC_stopoutputs to act on state changes
@@ -159,7 +202,8 @@ void DIG_process (uint8_t flags)
       }
 
       if ((CC_ATOMIC_GET(watchdog) <= 0) &&
-          ((CC_ATOMIC_GET(ESCvar.App.state) & APPSTATE_OUTPUT) > 0))
+          ((CC_ATOMIC_GET(ESCvar.App.state) & APPSTATE_OUTPUT) > 0) &&
+           (ESCvar.ESC_SM2_sml > 0))
       {
          DPRINT("DIG_process watchdog expired\n");
          ESC_ALstatusgotoerror((ESCsafeop | ESCerror), ALERR_WATCHDOG);
@@ -183,7 +227,7 @@ void DIG_process (uint8_t flags)
       }
       else if (ESCvar.ALevent & ESCREG_ALEVENT_SM2)
       {
-         RXPDO_update();
+         ESC_read (ESC_SM2_sma, rxpdo, ESCvar.ESC_SM2_sml);
       }
    }
 
@@ -325,18 +369,20 @@ void ecat_slv_init (esc_cfg_t * config)
 
 #if USE_FOE
    /* Init FoE */
-   FOE_init();
+   FOE_init ();
 #endif
 
 #if USE_EOE
    /* Init EoE */
-   EOE_init();
+   EOE_init ();
 #endif
 
    /* reset ESC to init state */
    ESC_ALstatus (ESCinit);
    ESC_ALerror (ALERR_NONE);
-   ESC_stopmbx();
-   ESC_stopinput();
-   ESC_stopoutput();
+   ESC_stopmbx ();
+   ESC_stopinput ();
+   ESC_stopoutput ();
+   /* Init Object Dictionary default values */
+   COE_initDefaultValues ();
 }
